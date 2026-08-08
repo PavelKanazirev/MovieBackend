@@ -1,0 +1,53 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 28, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}"
+    },
+    {
+      "name": "debug",
+      "inherits": "base",
+      "displayName": "Debug",
+      "description": "Debug build. Pick your compiler via the VS Code CMake Tools 'kit' selector (MSVC cl or clang-cl both work).",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MOVIEBACKEND_ENABLE_CLANG_TIDY": "OFF"
+      }
+    },
+    {
+      "name": "debug-clang-tidy",
+      "inherits": "debug",
+      "displayName": "Debug + clang-tidy",
+      "description": "Same as Debug, but also runs clang-tidy on every translation unit (slower build).",
+      "cacheVariables": {
+        "MOVIEBACKEND_ENABLE_CLANG_TIDY": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "base",
+      "displayName": "Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "debug" },
+    { "name": "debug-clang-tidy", "configurePreset": "debug-clang-tidy" },
+    { "name": "release", "configurePreset": "release" }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    }
+  ]
+}

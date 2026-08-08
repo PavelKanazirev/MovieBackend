@@ -1,0 +1,13 @@
+{
+  "cmake.sourceDirectory": "${workspaceFolder}",
+  "cmake.configureOnOpen": true,
+  "cmake.ctestArgs": ["--output-on-failure"],
+
+  "C_Cpp.default.cppStandard": "c++23",
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/out/build/${command:cmake.activeConfigurePresetName}/compile_commands.json",
+
+  "editor.formatOnSave": true,
+  "[cpp]": {
+    "editor.formatOnSave": true
+  }
+}

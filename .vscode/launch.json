@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "gdb: moviebackend_tests (debug preset)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/out/build/debug/tests/moviebackend_tests",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/out/build/debug/tests",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "CMake: build (debug)"
+    }
+  ]
+}

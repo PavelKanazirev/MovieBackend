@@ -1,0 +1,26 @@
+# MovieBackend static analysis configuration.
+#
+# Only enabled during a build when the "debug-clang-tidy" CMake preset (or
+# -DMOVIEBACKEND_ENABLE_CLANG_TIDY=ON) is used, since it slows compilation down noticeably.
+#
+# The check groups below are a fairly standard "modern C++ best practices" baseline. A handful
+# of the noisier/more opinionated checks are disabled so the tool stays useful rather than
+# overwhelming while you're still getting comfortable with modern C++ idioms - feel free to
+# tighten this over time as the codebase (and your familiarity with the checks) grows.
+Checks: >
+  -*,
+  bugprone-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -readability-identifier-length
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '(include|src)/.*'
+FormatStyle: file
