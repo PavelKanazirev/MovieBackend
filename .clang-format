@@ -1,0 +1,20 @@
+# MovieBackend code style.
+# Run manually with:  clang-format -i <file>
+# VS Code: install the "Clang-Format" extension and enable "editor.formatOnSave" (see .vscode/settings.json).
+BasedOnStyle: LLVM
+Standard: c++20          # highest value clang-format currently accepts; formatting behaves the same for C++23 code
+ColumnLimit: 110
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AccessModifierOffset: -4
+NamespaceIndentation: None
+BreakBeforeBraces: Allman
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+SpaceBeforeParens: ControlStatements

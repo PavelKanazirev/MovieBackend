@@ -1,0 +1,20 @@
+#-------------------------------------------------------------------------------------------------
+# moviebackend_enable_clang_tidy()
+#
+# Looks for a clang-tidy executable in PATH and, if found, wires it into the build so that every
+# compiled translation unit is also checked by clang-tidy (using the rules in .clang-tidy at the
+# repo root). Only called when MOVIEBACKEND_ENABLE_CLANG_TIDY is ON, since running clang-tidy on
+# every build slows down compilation noticeably.
+#-------------------------------------------------------------------------------------------------
+function(moviebackend_enable_clang_tidy)
+    find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
+
+    if(CLANG_TIDY_EXE)
+        message(STATUS "MovieBackend: clang-tidy found (${CLANG_TIDY_EXE}) - enabling static analysis")
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}" PARENT_SCOPE)
+    else()
+        message(WARNING
+            "MOVIEBACKEND_ENABLE_CLANG_TIDY is ON but no clang-tidy executable was found in PATH. "
+            "Static analysis will be skipped for this build.")
+    endif()
+endfunction()

@@ -1,0 +1,53 @@
+#-------------------------------------------------------------------------------------------------
+# MovieBackend - top-level CMake build script
+#
+# This project is an in-memory backend service (C++23) for booking movie tickets.
+# At this stage only the build/test/lint infrastructure is set up - no production code yet.
+#-------------------------------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.28)
+
+project(MovieBackend
+    VERSION 0.1.0
+    DESCRIPTION "In-memory backend service for booking online movie tickets"
+    LANGUAGES CXX
+)
+
+#-------------------------------------------------------------------------------------------------
+# Global project settings
+#-------------------------------------------------------------------------------------------------
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Needed by clang-tidy and by VS Code's IntelliSense/clangd to understand the exact build flags.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Default to a Debug build if nothing was requested (single-config generators, e.g. Ninja).
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
+#-------------------------------------------------------------------------------------------------
+# Project-wide options
+#-------------------------------------------------------------------------------------------------
+option(MOVIEBACKEND_BUILD_TESTS       "Build the unit test suite"                ON)
+option(MOVIEBACKEND_ENABLE_CLANG_TIDY "Run clang-tidy as part of compilation"    OFF)
+option(MOVIEBACKEND_WARNINGS_AS_ERRORS "Treat compiler warnings as errors"       OFF)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+include(CompilerWarnings)   # -> moviebackend_set_warnings(<target>)
+include(ClangTidy)          # -> moviebackend_enable_clang_tidy(<target>)
+
+#-------------------------------------------------------------------------------------------------
+# Library / executable targets
+#-------------------------------------------------------------------------------------------------
+add_subdirectory(src)
+
+#-------------------------------------------------------------------------------------------------
+# Tests
+#-------------------------------------------------------------------------------------------------
+if(MOVIEBACKEND_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
