@@ -132,6 +132,64 @@ gdb -q -batch -ex "break sanity_test.cpp:14" -ex run -ex bt -ex continue \
   ./out/build/debug/tests/moviebackend_tests
 ```
 
+### Command-line quick reference (without presets)
+
+Everything above uses `CMakePresets.json` (`cmake --preset <name>` / `cmake --build --preset
+<name>` / `ctest --preset <name>`), which is the recommended path. The presets are just a
+wrapper around plain CMake invocations, though - useful to know if you're on a machine without
+preset support, want a plain `Makefile`, or are troubleshooting. The pattern is always the same
+three steps: **configure once** (pick a generator/build type), **build**, **test**.
+
+| Platform | Generator | Toolchain notes |
+|---|---|---|
+| Linux / WSL (Ubuntu) | `Ninja` | Same generator the presets use; needs `ninja-build` installed |
+| Linux / WSL (Ubuntu) | `Unix Makefiles` | Produces a plain `Makefile`, driven by GNU Make |
+| Windows 11 (MSYS2) | `MSYS Makefiles` | Run from an MSYS2 shell (MinGW/UCRT64 environment); driven by GNU Make |
+| Windows 11 (MSVC) | `Ninja` | Fastest MSVC option; run from a Developer environment (or with `cl.exe` on `PATH` as in your setup) |
+| Windows 11 (MSVC) | `Visual Studio 17 2022` | Multi-config generator - build type is chosen at build time via `--config`, not at configure time |
+
+**Linux / WSL, Ninja** (same result as `cmake --preset debug`):
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+**Linux / WSL, GNU Make:**
+```bash
+cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug
+cd build
+make -j"$(nproc)"     # build everything
+make test              # runs the CTest suite (equivalent to plain `ctest`)
+ctest --output-on-failure   # same thing, with per-test output on failure
+```
+
+**Windows 11, MSYS2 shell, GNU Make:**
+```bash
+cmake -S . -B build -G "MSYS Makefiles" -DCMAKE_BUILD_TYPE=Debug
+cd build
+mingw32-make -j"$(nproc)"    # some MSYS2 environments use `make` instead - check `which make`
+ctest --output-on-failure
+```
+
+**Windows 11, MSVC, Visual Studio generator** (multi-config - no `CMAKE_BUILD_TYPE` at configure
+time):
+```powershell
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake --build build --config Debug
+ctest --test-dir build -C Debug --output-on-failure
+```
+
+**Running/filtering tests directly**, bypassing CTest, once built (useful for iterating on one
+test, e.g. `SeatAvailabilityTest`):
+```bash
+./build/tests/moviebackend_tests --gtest_list_tests
+./build/tests/moviebackend_tests --gtest_filter=SeatAvailabilityTest.*
+```
+(On Windows this is `.\build\tests\Debug\moviebackend_tests.exe --gtest_filter=...` with the
+Visual Studio generator, or `.\build\tests\moviebackend_tests.exe` with Ninja/Makefiles.)
+
+
 ### Code quality tooling
 
 | Tool | Config file | How it runs |
@@ -165,4 +223,7 @@ class - a minimal seat-availability lookup for one theater screening, used here 
 the whole pipeline (library target -> test target -> GoogleTest -> CTest -> clang-format ->
 clang-tidy -> gdb) works with real code before the rest of the domain model is built on top of it.
 
+### Credits
+
+Some of the infrastructure code in this repository - particularly the parts related to managing dependencies inside a Docker container - are influenced by the book "Embedded Programming with Modern C++" by Igor Viarheichyk.
 
