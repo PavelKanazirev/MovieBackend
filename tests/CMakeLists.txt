@@ -1,23 +1,10 @@
 #-------------------------------------------------------------------------------------------------
 # MovieBackend unit tests
 #
-# GoogleTest is fetched at configure time (no system-wide install required, no vcpkg/Conan needed
-# for this piece). Pinned to a specific tag so builds are reproducible.
+# GoogleTest is fetched at configure time by moviebackend_add_googletest() (cmake/Dependencies.cmake),
+# called from the top-level CMakeLists.txt before this directory is processed. No system-wide
+# install is required.
 #-------------------------------------------------------------------------------------------------
-include(FetchContent)
-
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        v1.15.2
-)
-
-# Match GoogleTest's runtime library to the rest of the project on MSVC (avoids "mismatched
-# /MD vs /MT CRT" link errors).
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(googletest)
-
 add_executable(moviebackend_tests
     sanity_test.cpp
     seat_availability_test.cpp
