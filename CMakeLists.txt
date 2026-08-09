@@ -38,6 +38,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(CompilerWarnings)   # -> moviebackend_set_warnings(<target>)
 include(ClangTidy)          # -> moviebackend_enable_clang_tidy(<target>)
+include(Dependencies)       # -> moviebackend_add_googletest(), and more to follow
 
 #-------------------------------------------------------------------------------------------------
 # Library / executable targets
