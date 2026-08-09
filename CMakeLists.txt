@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------------------------
 # MovieBackend - top-level CMake build script
 #
-# This project is an in-memory backend service (C++23) for booking movie tickets.
+# This project is an in-memory backend service (C++) for booking movie tickets.
 # At this stage only the build/test/lint infrastructure is set up - no production code yet.
 #-------------------------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.28)
