@@ -1,0 +1,17 @@
+@startuml architecture
+' =================================================================================================
+' Component layout and the dependency direction between the build targets.
+'
+' The one rule worth reading off this diagram: dependencies point inwards. moviebackend_core knows
+' nothing about sockets or Protobuf, which is what lets a UI embed it in-process, and what lets
+' the domain logic be tested without a network.
+'
+' Render with:  plantuml -tsvg docs/diagrams/architecture.puml
+' =================================================================================================
+
+class Dummy {
+    - String Dummy
+    + dummy()
+}
+
+@enduml

@@ -49,5 +49,22 @@ add_subdirectory(src)
 #-------------------------------------------------------------------------------------------------
 if(MOVIEBACKEND_BUILD_TESTS)
     enable_testing()
+    moviebackend_add_googletest()
     add_subdirectory(tests)
 endif()
+
+#-------------------------------------------------------------------------------------------------
+# Documentation ("doc as code": Doxygen + PlantUML, generated from the same headers the
+# consumer compiles against, so it can never describe an API that no longer exists).
+#-------------------------------------------------------------------------------------------------
+if(MOVIEBACKEND_BUILD_DOCS)
+    add_subdirectory(docs)
+endif()
+
+#-------------------------------------------------------------------------------------------------
+# Installation - what `cmake --install` (and therefore the BitBake recipe and the Docker image)
+# actually ships. The targets themselves are installed by src/CMakeLists.txt.
+#-------------------------------------------------------------------------------------------------
+install(DIRECTORY include/moviebackend
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.hpp")

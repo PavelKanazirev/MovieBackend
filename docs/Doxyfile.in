@@ -1,0 +1,114 @@
+# Doxygen configuration for MovieBackend.
+#
+# Processed by CMake (docs/CMakeLists.txt) with @VARIABLE@ substitution, so paths follow the
+# build tree rather than being hard-coded. Only the settings that differ from Doxygen's defaults
+# are listed, with a note on why each one is set the way it is.
+
+#---------------------------------------------------------------------------
+# Project identity
+#---------------------------------------------------------------------------
+PROJECT_NAME           = "MovieBackend"
+PROJECT_NUMBER         = "@PROJECT_VERSION@"
+PROJECT_BRIEF          = "In-memory backend service for booking online movie tickets"
+OUTPUT_DIRECTORY       = "@DOXYGEN_OUTPUT_DIR@"
+
+#---------------------------------------------------------------------------
+# Input
+#---------------------------------------------------------------------------
+INPUT                  = @DOXYGEN_INPUT_DIRS@
+FILE_PATTERNS          = *.hpp *.cpp *.md
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */build/* */out/* */_deps/* */generated/*
+
+# The README doubles as the documentation landing page, so the setup instructions and the API
+# reference are one artifact rather than two that drift apart.
+USE_MDFILE_AS_MAINPAGE = "@DOXYGEN_MAIN_PAGE@"
+
+# Images and diagram sources referenced from doc comments.
+IMAGE_PATH             = "@CMAKE_CURRENT_SOURCE_DIR@/diagrams"
+
+#---------------------------------------------------------------------------
+# What to document
+#---------------------------------------------------------------------------
+# Implementation files are indexed too: several of the most important explanations in this
+# project (the locking strategy, the threading model) live in the .cpp file headers, because that
+# is where they are true.
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = NO
+
+# A missing comment on a public API should be visible, not silent.
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = YES
+QUIET                  = YES
+
+#---------------------------------------------------------------------------
+# Presentation
+#---------------------------------------------------------------------------
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+SORT_MEMBER_DOCS       = NO
+SORT_BRIEF_DOCS        = NO
+
+# Full paths would leak the build machine's directory layout into the published docs.
+FULL_PATH_NAMES        = YES
+STRIP_FROM_PATH        = "@CMAKE_SOURCE_DIR@"
+STRIP_FROM_INC_PATH    = "@CMAKE_SOURCE_DIR@/include"
+
+#---------------------------------------------------------------------------
+# Output formats
+#---------------------------------------------------------------------------
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+HTML_DYNAMIC_SECTIONS  = YES
+
+# LaTeX is off: nothing in this project needs a PDF, and it doubles the build time.
+GENERATE_LATEX         = NO
+
+# XML is on so the docs can be fed to other tools (Sphinx/Breathe, a coverage dashboard) later
+# without reconfiguring Doxygen.
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+
+#---------------------------------------------------------------------------
+# Source browsing
+#---------------------------------------------------------------------------
+# Being able to jump from the API reference straight to the implementation is worth far more in a
+# concurrent codebase than any prose summary.
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+
+#---------------------------------------------------------------------------
+# Diagrams
+#---------------------------------------------------------------------------
+HAVE_DOT               = @DOXYGEN_DOT_FOUND@
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = YES
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = NO
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+
+# Rendered \startuml blocks. Empty when plantuml.jar was not found at configure time, in which
+# case Doxygen simply shows the diagram source instead of failing.
+PLANTUML_JAR_PATH      = "@PLANTUML_JAR_PATH@"
+
+#---------------------------------------------------------------------------
+# Preprocessing
+#---------------------------------------------------------------------------
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+
+# Documents the Linux side of the platform split. Without this, the Windows branches of
+# socket.cpp would be the ones shown, which is not what most readers of these docs are building.
+PREDEFINED             = DOXYGEN_SHOULD_SKIP_THIS
