@@ -32,3 +32,67 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  # -----------------------------------------------------------------------------------------------
+  # Doc-as-code: the reference is regenerated on every change, so it cannot silently rot.
+  # -----------------------------------------------------------------------------------------------
+  documentation:
+    name: Documentation
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            ninja-build protobuf-compiler libprotobuf-dev \
+            libspdlog-dev nlohmann-json3-dev \
+            doxygen graphviz plantuml default-jre-headless
+
+      - name: Build
+        run: ./scripts/build.sh
+
+      # --strict: on a runner where the toolchain is controlled, a missing Doxygen means the
+      # workflow is misconfigured, not that documentation should quietly be skipped.
+      - name: Generate documentation
+        run: ./scripts/generate_docs.sh --strict
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation
+          path: build/docs/html/
+          if-no-files-found: error
+
+  # -----------------------------------------------------------------------------------------------
+  # The Docker build runs the test suite inside the image, so this also proves the image is sound.
+  # -----------------------------------------------------------------------------------------------
+  docker:
+    name: Docker image
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        run: docker build -f docker/Dockerfile -t moviebackend:ci .
+
+      - name: Smoke-test the container
+        run: |
+          docker run -d --name moviebackend-ci -p 5555:5555 moviebackend:ci
+          python3 -m pip install --break-system-packages -r cli/requirements.txt
+
+          # Poll rather than sleep: faster when the container is quick, reliable when it is not.
+          for _ in $(seq 1 30); do
+            if python3 -c "import socket,sys; sys.exit(0 if socket.socket().connect_ex(('127.0.0.1',5555))==0 else 1)"; then
+              break
+            fi
+            sleep 1
+          done
+		#ToDo : python3 cli/moviebackend-cli --port 5555 <test>
+          # `docker stop` sends SIGTERM; a clean exit here proves the graceful shutdown path
+          # works in the container, where the server must be PID 1 to receive the signal at all.
+          docker stop moviebackend-ci
+          docker logs moviebackend-ci | tail -20

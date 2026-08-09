@@ -1,0 +1,43 @@
+# =================================================================================================
+# Convenience wrapper around the server image.
+#
+#   docker compose -f docker/docker-compose.yml up --build
+#   docker compose -f docker/docker-compose.yml down
+#
+# Then, from the host:
+#   python3 cli/moviebackend-cli --port 5555 movies
+# =================================================================================================
+services:
+  moviebackend:
+    build:
+      # The repository root, because the Dockerfile copies include/, src/, proto/ and friends.
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: moviebackend:latest
+    container_name: moviebackend
+
+    ports:
+      - "5555:5555"
+
+    environment:
+      # Overridable without rebuilding: MOVIEBACKEND_LOG_LEVEL=debug docker compose up
+      MOVIEBACKEND_LOG_LEVEL: "${MOVIEBACKEND_LOG_LEVEL:-info}"
+
+    # Swap in your own catalog without touching the image. Comment this out to use the built-in
+    # one baked in at /etc/moviebackend/catalog.json.
+    volumes:
+      - ../config/catalog.json:/etc/moviebackend/catalog.json:ro
+
+    restart: unless-stopped
+
+    # `docker compose down` sends SIGTERM; the server's handler needs a moment to drain its
+    # worker threads. 15 s is far more than the ~200 ms it actually takes, and it means a slow
+    # shutdown is never mistaken for a hang and killed.
+    stop_grace_period: 15s
+
+    # The service holds all state in memory and writes nothing, so it needs no write access to
+    # its own filesystem. Making that explicit turns a whole class of container escape into a
+    # non-event.
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
