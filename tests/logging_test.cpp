@@ -1,11 +1,11 @@
 #include "moviebackend/logging.hpp"
 
 #include <array>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
-#include <chrono>
 #include <thread>
 
 using moviebackend::logging::Level;
@@ -34,18 +34,20 @@ protected:
         std::filesystem::remove(temp_log_path_, ec);
         (void)ec;
     }
-    void TearDown() override {
-        moviebackend::logging::shutdown(); 
+
+    void TearDown() override
+    {
+        moviebackend::logging::shutdown();
         // Try to remove the temporary logfile. Any error here is non-fatal for the test harness.
-       if (!temp_log_path_.empty())
-       {
-           std::error_code ec;
-           std::filesystem::remove(temp_log_path_, ec);
-           (void)ec;
-       }
+        if (!temp_log_path_.empty())
+        {
+            std::error_code ec;
+            std::filesystem::remove(temp_log_path_, ec);
+            (void)ec;
+        }
     }
 
-protected: 
+protected:
     std::filesystem::path temp_log_path_;
 };
 

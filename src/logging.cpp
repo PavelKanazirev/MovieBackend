@@ -99,9 +99,7 @@ void shutdown()
     spdlog::drop(kLoggerName);
 
     auto discardLogger =
-        std::make_shared<spdlog::logger>(
-            kLoggerName,
-            std::make_shared<spdlog::sinks::null_sink_mt>());
+        std::make_shared<spdlog::logger>(kLoggerName, std::make_shared<spdlog::sinks::null_sink_mt>());
 
     discardLogger->set_level(spdlog::level::off);
     spdlog::set_default_logger(std::move(discardLogger));
