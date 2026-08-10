@@ -98,13 +98,9 @@ COPY --from=builder /opt/moviebackend /opt/moviebackend
 
 # The default catalog, at a path the operator can override with a bind mount:
 #   docker run -v /my/catalog.json:/etc/moviebackend/catalog.json ...
-RUN mkdir -p /etc/moviebackend
-RUN if [ -f /opt/moviebackend/share/moviebackend/catalog.json ]; then \
-      cp /opt/moviebackend/share/moviebackend/catalog.json /etc/moviebackend/catalog.json; \
-    else \
-      echo '{}' > /etc/moviebackend/catalog.json; \
-    fi
-RUN chown -R moviebackend:moviebackend /etc/moviebackend
+RUN mkdir -p /etc/moviebackend \
+    && cp /opt/moviebackend/share/moviebackend/catalog.json /etc/moviebackend/catalog.json \
+    && chown -R moviebackend:moviebackend /etc/moviebackend
 
 ENV PATH="/opt/moviebackend/bin:${PATH}"
 
@@ -119,15 +115,6 @@ EXPOSE 5555
 # Console-only logging, because the orchestrator (docker logs, Kubernetes, journald) is what
 # collects stdout - writing to a file inside an ephemeral container would just lose it.
 ENV MOVIEBACKEND_LOG_LEVEL=info
-
-# exec form, not shell form: this makes moviebackend_server PID 1 directly, so the SIGTERM that
-# `docker stop` sends reaches the process's own handler and triggers the graceful shutdown path.
-# In shell form, /bin/sh would be PID 1 and would swallow the signal, and every stop would end in
-# a 10-second timeout followed by SIGKILL.
-ENTRYPOINT ["moviebackend_server", \
-            "--host", "0.0.0.0", \
-            "--port", "5555", \
-            "--config", "/etc/moviebackend/catalog.json"]
 
 # Overridable at `docker run` time, e.g.:  docker run moviebackend --log-level debug
 CMD []
