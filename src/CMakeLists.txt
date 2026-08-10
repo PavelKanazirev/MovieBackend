@@ -5,6 +5,7 @@ moviebackend_add_spdlog()
 
 add_library(moviebackend_core
     logging.cpp
+    domain_types.cpp
     seat_availability.cpp
 )
 
