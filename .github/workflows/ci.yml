@@ -66,6 +66,7 @@ jobs:
       # workflow is misconfigured, not that documentation should quietly be skipped.
       - name: Set permissions for docs generation
         run: chmod +x ./scripts/generate_docs.sh
+
       - name: Generate documentation
         run: ./scripts/generate_docs.sh --strict
 
