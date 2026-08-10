@@ -99,7 +99,7 @@ COPY --from=builder /opt/moviebackend /opt/moviebackend
 # The default catalog, at a path the operator can override with a bind mount:
 #   docker run -v /my/catalog.json:/etc/moviebackend/catalog.json ...
 RUN mkdir -p /etc/moviebackend \
-    && cp /opt/moviebackend/share/moviebackend/catalog.json /etc/moviebackend/catalog.json \
+    && ([ -f /opt/moviebackend/share/moviebackend/catalog.json ] && cp /opt/moviebackend/share/moviebackend/catalog.json /etc/moviebackend/catalog.json || echo "Warning: catalog.json not found") \
     && chown -R moviebackend:moviebackend /etc/moviebackend
 
 ENV PATH="/opt/moviebackend/bin:${PATH}"
