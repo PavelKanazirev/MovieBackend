@@ -17,12 +17,23 @@ jobs:
             | xargs -0 -r clang-format --dry-run --Werror
 
   build-and-test:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Ninja
+      - name: Install Ninja (Linux)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      # windows-latest ships Ninja and CMake already, but not an activated MSVC environment -
+      # cl.exe needs INCLUDE/LIB/PATH set up before CMake's Ninja generator can find it.
+      - name: Set up MSVC developer environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
@@ -91,7 +102,7 @@ jobs:
             fi
             sleep 1
           done
-		#ToDo : python3 cli/moviebackend-cli --port 5555 <test>
+          # ToDo: python3 cli/moviebackend-cli --port 5555 <test>
           # `docker stop` sends SIGTERM; a clean exit here proves the graceful shutdown path
           # works in the container, where the server must be PID 1 to receive the signal at all.
           docker stop moviebackend-ci
