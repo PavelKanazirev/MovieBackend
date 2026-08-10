@@ -22,5 +22,14 @@ Checks: >
   -readability-identifier-length
 
 WarningsAsErrors: ''
-HeaderFilterRegex: '(include|src)/.*'
+# Anchored to /MovieBackend/(include|src)/ rather than the bare '(include|src)/.*' this used to
+# be: that broader pattern matches ANY path containing an include/ or src/ component, which turns
+# out to include every FetchContent'd dependency too (e.g. .../_deps/spdlog-src/include/...),
+# since they happen to ship their own include/ directories. Confirmed by actually building with
+# clang-tidy enabled before and after this change - the unanchored version produced dozens of
+# warnings against spdlog's own headers, none of which are ours to fix.
+# Assumes the checkout directory is named "MovieBackend" (true for a normal `git clone`); a
+# differently-named checkout just means clang-tidy stops flagging our own headers too, not a
+# safety issue, just a missed warning.
+HeaderFilterRegex: '.*/MovieBackend/(include|src)/.*'
 FormatStyle: file

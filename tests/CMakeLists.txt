@@ -8,6 +8,7 @@
 add_executable(moviebackend_tests
     sanity_test.cpp
     seat_availability_test.cpp
+    logging_test.cpp
 )
 
 target_link_libraries(moviebackend_tests
