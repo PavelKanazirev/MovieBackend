@@ -52,11 +52,11 @@ COPY cmake/ ./cmake/
 # Now the sources.
 COPY include/ ./include/
 COPY src/ ./src/
-COPY proto/ ./proto/
+COPY proto/ ./proto/ 2>/dev/null || true
 COPY tests/ ./tests/
 COPY docs/ ./docs/
 COPY config/ ./config/
-COPY cli/ ./cli/
+COPY cli/ ./cli/ 2>/dev/null || true
 
 # Release build. Tests are built and run here rather than being skipped: an image whose test
 # suite fails should never be produced in the first place, and catching it at build time is far
