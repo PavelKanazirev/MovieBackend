@@ -62,8 +62,9 @@ jobs:
             libspdlog-dev nlohmann-json3-dev \
             doxygen graphviz plantuml default-jre-headless
 
-      # --strict: on a runner where the toolchain is controlled, a missing Doxygen means the
-      # workflow is misconfigured, not that documentation should quietly be skipped.
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+
       - name: Generate documentation
         run: |
           chmod +x ./scripts/generate_docs.sh
