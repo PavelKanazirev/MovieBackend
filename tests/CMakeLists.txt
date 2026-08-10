@@ -9,6 +9,7 @@ add_executable(moviebackend_tests
     logging_test.cpp
     catalog_test.cpp
     booking_service_test.cpp
+    booking_service_concurrency_test.cpp
 )
 
 target_link_libraries(moviebackend_tests
