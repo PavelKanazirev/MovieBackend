@@ -17,7 +17,34 @@ namespace
 class LoggingTest : public ::testing::Test
 {
 protected:
-    void TearDown() override { moviebackend::logging::shutdown(); }
+    void SetUp() override
+    {
+        // Build a reasonably unique filename using time + thread id. Good enough for CI
+        // parallelism without relying on unsafe tmpnam() calls.
+        const auto tmp_dir = std::filesystem::temp_directory_path();
+        const auto now_ns = std::chrono::system_clock::now().time_since_epoch().count();
+        std::ostringstream ss;
+        ss << "moviebackend_logging_test_" << now_ns << "_" << std::this_thread::get_id() << ".log";
+        temp_log_path_ = tmp_dir / ss.str();
+
+        // Ensure there's no stale file from a previous run.
+        std::error_code ec;
+        std::filesystem::remove(temp_log_path_, ec);
+        (void)ec;
+    }
+    void TearDown() override {
+        moviebackend::logging::shutdown(); 
+        // Try to remove the temporary logfile. Any error here is non-fatal for the test harness.
+       if (!temp_log_path_.empty())
+       {
+           std::error_code ec;
+           std::filesystem::remove(temp_log_path_, ec);
+           (void)ec;
+       }
+    }
+
+protected: 
+    std::filesystem::path temp_log_path_;
 };
 
 } // namespace
