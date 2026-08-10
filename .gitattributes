@@ -1,0 +1,24 @@
+# Normalize line endings to LF in the repository for (almost) everything, regardless of which
+# platform a file was edited on. Git still checks files out using the OS's native line ending
+# where it matters (see the .bat/.sln overrides below) - this only controls what's stored.
+#
+# Why this file exists: a working tree pulled from this repo and edited on Windows showed every
+# text file as "modified" purely from CRLF conversion, with zero real content changes underneath
+# (confirmed with `git diff --stat -w`). That's exactly the kind of noise this file prevents.
+* text=auto eol=lf
+
+# Shell scripts must keep LF even if a tool insists otherwise - CRLF line endings make bash fail
+# immediately with "bad interpreter" or silently swallow the script (\r treated as part of the
+# last argument on each line).
+*.sh text eol=lf
+
+# Windows-specific files should keep native CRLF, since that's what tools in that ecosystem
+# expect to edit and diff correctly.
+*.bat text eol=crlf
+*.sln text eol=crlf
+*.vcxproj text eol=crlf
+
+# Binary/generated content: never touch line endings, and don't diff them as text.
+*.png binary
+*.jpg binary
+*.ico binary
