@@ -95,13 +95,14 @@ void shutdown()
         logger->flush();
     }
 
-    // Deliberately not spdlog::shutdown(): that drops every registered logger and leaves
-    // spdlog::default_logger_raw() returning nullptr, which the SPDLOG_* macros then dereference
-    // unconditionally - the exact crash the header's @post promises will not happen (destructors
-    // that log during teardown are the common case this guards against). Installing a logger
-    // backed by a null sink gives every MB_LOG_* call somewhere safe to go instead.
+    // Releases the registered rotating-file sink and its file handle.
+    spdlog::drop(kLoggerName);
+
     auto discardLogger =
-        std::make_shared<spdlog::logger>(kLoggerName, std::make_shared<spdlog::sinks::null_sink_mt>());
+        std::make_shared<spdlog::logger>(
+            kLoggerName,
+            std::make_shared<spdlog::sinks::null_sink_mt>());
+
     discardLogger->set_level(spdlog::level::off);
     spdlog::set_default_logger(std::move(discardLogger));
 }
