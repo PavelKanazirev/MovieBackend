@@ -31,15 +31,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 # removed in the same layer that created it (removing it in a later layer would not shrink the
 # image at all).
 RUN apt-get update && apt-get install --no-install-recommends -y \
-        build-essential \
-        cmake \
-        ninja-build \
-        git \
-        ca-certificates \
-        libprotobuf-dev \
-        protobuf-compiler \
-        libspdlog-dev \
-        nlohmann-json3-dev \
+    build-essential \
+    cmake \
+    ninja-build \
+    git \
+    ca-certificates \
+    libprotobuf-dev \
+    protobuf-compiler \
+    libspdlog-dev \
+    nlohmann-json3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
@@ -65,9 +65,9 @@ RUN if [ -d cli ]; then cp -r cli ./cli; fi
 # Docs are off - the runtime image has no use for Doxygen output, and installing it would add
 # several hundred megabytes to the builder for nothing.
 RUN cmake -S . -B build -G Ninja \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DMOVIEBACKEND_BUILD_TESTS=ON \
-        -DMOVIEBACKEND_BUILD_DOCS=OFF \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DMOVIEBACKEND_BUILD_TESTS=ON \
+    -DMOVIEBACKEND_BUILD_DOCS=OFF \
     && cmake --build build --parallel \
     && ctest --test-dir build --output-on-failure --parallel 4 \
     && cmake --install build --prefix /opt/moviebackend
@@ -83,9 +83,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # The runtime packages, not the -dev ones: headers and static archives are build-time artifacts.
 RUN apt-get update && apt-get install --no-install-recommends -y \
-        libprotobuf32t64 \
-        libspdlog1.12 \
-        libstdc++6 \
+    libprotobuf32t64 \
+    libspdlog1.12 \
+    libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
 # A non-root user. The service needs no privileges at all - it opens one unprivileged port and
@@ -116,8 +116,6 @@ EXPOSE 5555
 # collects stdout - writing to a file inside an ephemeral container would just lose it.
 ENV MOVIEBACKEND_LOG_LEVEL=info
 
-# Overridable at `docker run` time, e.g.:  docker run moviebackend --log-level debug
-CMD []
 
 # A container that is up but not accepting connections is worse than one that is down, because
 # nothing notices. This proves the port actually answers.
@@ -125,6 +123,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD bash -c 'exec 3<>/dev/tcp/127.0.0.1/5555' || exit 1
 
 LABEL org.opencontainers.image.title="MovieBackend" \
-      org.opencontainers.image.description="In-memory backend service for booking movie tickets" \
-      org.opencontainers.image.source="https://github.com/PavelKanazirev/MovieBackend" \
-      org.opencontainers.image.licenses="MIT"
+    org.opencontainers.image.description="In-memory backend service for booking movie tickets" \
+    org.opencontainers.image.source="https://github.com/PavelKanazirev/MovieBackend" \
+    org.opencontainers.image.licenses="MIT"
