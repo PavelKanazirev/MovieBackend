@@ -8,6 +8,7 @@ add_library(moviebackend_core
     logging.cpp
     domain_types.cpp
     catalog.cpp
+    booking_service.cpp
 )
 
 target_include_directories(moviebackend_core
@@ -26,9 +27,12 @@ target_compile_definitions(moviebackend_core
         SPDLOG_ACTIVE_LEVEL=$<IF:$<CONFIG:Debug>,SPDLOG_LEVEL_TRACE,SPDLOG_LEVEL_INFO>
 )
 
+find_package(Threads REQUIRED)
+
 target_link_libraries(moviebackend_core
     PUBLIC
         spdlog::spdlog
+        Threads::Threads
     PRIVATE
         nlohmann_json::nlohmann_json
 )
