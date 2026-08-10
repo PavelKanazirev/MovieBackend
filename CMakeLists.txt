@@ -91,3 +91,7 @@ endif()
 install(DIRECTORY include/moviebackend
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN "*.hpp")
+
+# Install the default catalog configuration
+install(FILES config/catalog.json
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/moviebackend)
