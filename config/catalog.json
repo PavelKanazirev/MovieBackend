@@ -1,0 +1,40 @@
+{
+  "_comment": [
+    "MovieBackend catalog configuration.",
+    "",
+    "Loaded at start-up with --config <path> and never re-read while the server runs, which is",
+    "what lets BookingService treat it as immutable and skip locking on every lookup.",
+    "",
+    "defaultSeatCapacity  - seats in a theater that does not set its own 'seatCapacity'.",
+    "                       20 by default, as specified by the project requirements.",
+    "defaultSeatsPerRow   - seats per lettered row, which is what decides seat naming.",
+    "                       Equal to the capacity here, so each theater is one row a1..a20.",
+    "                       Set it to 10 instead and 20 seats become a1..a10 plus b1..b10.",
+    "",
+    "Every entry in 'showings' must reference an existing movie id and theater id; the loader",
+    "rejects the file at start-up otherwise, rather than failing later on a user request."
+  ],
+
+  "defaultSeatCapacity": 20,
+  "defaultSeatsPerRow": 20,
+
+  "movies": [
+    { "id": "m1", "title": "The Matrix",    "durationMinutes": 136, "genre": "Sci-Fi" },
+    { "id": "m2", "title": "Interstellar",  "durationMinutes": 169, "genre": "Sci-Fi" },
+    { "id": "m3", "title": "The Godfather", "durationMinutes": 175, "genre": "Crime"  }
+  ],
+
+  "theaters": [
+    { "id": "t1", "name": "Cineplex Downtown - Screen 1", "location": "Main Street 1" },
+    { "id": "t2", "name": "Cineplex Downtown - Screen 2", "location": "Main Street 1" },
+    { "id": "t3", "name": "Riverside Cinema - Screen A",  "location": "Riverside 42"  }
+  ],
+
+  "showings": [
+    { "movieId": "m1", "theaterId": "t1" },
+    { "movieId": "m1", "theaterId": "t3" },
+    { "movieId": "m2", "theaterId": "t2" },
+    { "movieId": "m2", "theaterId": "t3" },
+    { "movieId": "m3", "theaterId": "t1" }
+  ]
+}

@@ -2,11 +2,12 @@
 # moviebackend_core - the library other services/CLIs and the test suite link against.
 #-------------------------------------------------------------------------------------------------
 moviebackend_add_spdlog()
+moviebackend_add_nlohmann_json()
 
 add_library(moviebackend_core
     logging.cpp
     domain_types.cpp
-    seat_availability.cpp
+    catalog.cpp
 )
 
 target_include_directories(moviebackend_core
@@ -28,6 +29,8 @@ target_compile_definitions(moviebackend_core
 target_link_libraries(moviebackend_core
     PUBLIC
         spdlog::spdlog
+    PRIVATE
+        nlohmann_json::nlohmann_json
 )
 
 moviebackend_set_warnings(moviebackend_core)
