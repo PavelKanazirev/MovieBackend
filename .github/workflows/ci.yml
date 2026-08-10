@@ -68,7 +68,6 @@ jobs:
       - name: Generate documentation
         run: |
           chmod +x ./scripts/generate_docs.sh
-          rm -rf build/docs
           ./scripts/generate_docs.sh --strict
 
       - name: Upload documentation
