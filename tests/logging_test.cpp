@@ -5,6 +5,8 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
+#include <chrono>
+#include <thread>
 
 using moviebackend::logging::Level;
 using moviebackend::logging::Options;
@@ -111,8 +113,7 @@ TEST_F(LoggingTest, InitializeWithConsoleOnlyDoesNotThrow)
 
 TEST_F(LoggingTest, InitializeWritesToTheConfiguredFile)
 {
-    const auto logPath = std::filesystem::temp_directory_path() / "moviebackend_logging_test.log";
-    std::filesystem::remove(logPath);
+    const auto& logPath = temp_log_path_;
 
     Options options;
     options.logToConsole = false;
@@ -121,22 +122,26 @@ TEST_F(LoggingTest, InitializeWritesToTheConfiguredFile)
 
     moviebackend::logging::initialize(options);
     MB_LOG_INFO("hello from the logging test");
-    moviebackend::logging::shutdown(); // flushes before we read the file back
+    moviebackend::logging::shutdown();
 
     ASSERT_TRUE(std::filesystem::exists(logPath));
 
-    std::ifstream file(logPath);
-    std::stringstream contents;
-    contents << file.rdbuf();
-    EXPECT_NE(contents.str().find("hello from the logging test"), std::string::npos);
+    {
+        std::ifstream file(logPath);
+        ASSERT_TRUE(file.is_open());
 
-    std::filesystem::remove(logPath);
+        std::stringstream contents;
+        contents << file.rdbuf();
+        EXPECT_NE(contents.str().find("hello from the logging test"), std::string::npos);
+    } // `file` is closed here
+
+    EXPECT_TRUE(std::filesystem::remove(logPath));
+    temp_log_path_.clear(); // TearDown has nothing left to remove
 }
 
 TEST_F(LoggingTest, SetLevelSuppressesLowerSeverityMessages)
 {
-    const auto logPath = std::filesystem::temp_directory_path() / "moviebackend_logging_level_test.log";
-    std::filesystem::remove(logPath);
+    const auto& logPath = temp_log_path_;
 
     Options options;
     options.logToConsole = false;
@@ -150,14 +155,19 @@ TEST_F(LoggingTest, SetLevelSuppressesLowerSeverityMessages)
     MB_LOG_ERROR("this MUST appear - at the Error threshold");
     moviebackend::logging::shutdown();
 
-    std::ifstream file(logPath);
-    std::stringstream contents;
-    contents << file.rdbuf();
+    {
+        std::ifstream file(logPath);
+        ASSERT_TRUE(file.is_open());
 
-    EXPECT_EQ(contents.str().find("this must NOT appear"), std::string::npos);
-    EXPECT_NE(contents.str().find("this MUST appear"), std::string::npos);
+        std::stringstream contents;
+        contents << file.rdbuf();
 
-    std::filesystem::remove(logPath);
+        EXPECT_EQ(contents.str().find("this must NOT appear"), std::string::npos);
+        EXPECT_NE(contents.str().find("this MUST appear"), std::string::npos);
+    } // `file` is closed here
+
+    EXPECT_TRUE(std::filesystem::remove(logPath));
+    temp_log_path_.clear();
 }
 
 TEST_F(LoggingTest, LoggingAfterShutdownDoesNotCrash)
