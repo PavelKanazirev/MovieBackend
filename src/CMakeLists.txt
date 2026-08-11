@@ -39,3 +39,30 @@ target_link_libraries(moviebackend_core
 
 moviebackend_set_warnings(moviebackend_core)
 moviebackend_enable_clang_tidy(moviebackend_core)
+
+#-------------------------------------------------------------------------------------------------
+# moviebackend_net - transport. Cross-platform sockets, message framing, the threaded TCP server,
+# and the Protobuf <-> domain request handler land here across the next several commits; this one
+# starts it with just the socket wrapper.
+#-------------------------------------------------------------------------------------------------
+add_library(moviebackend_net
+    net/socket.cpp
+)
+
+target_link_libraries(moviebackend_net
+    PUBLIC
+        moviebackend_core
+)
+
+target_compile_features(moviebackend_net PUBLIC cxx_std_23)
+
+# Winsock. MSVC picks this up from the #pragma comment in socket.cpp, but MinGW/MSYS2 and
+# clang-cl need it stated here.
+if(WIN32)
+    target_link_libraries(moviebackend_net PUBLIC ws2_32)
+endif()
+
+target_link_libraries(moviebackend_net PUBLIC Threads::Threads)
+
+moviebackend_set_warnings(moviebackend_net)
+moviebackend_enable_clang_tidy(moviebackend_net)
