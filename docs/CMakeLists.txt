@@ -31,7 +31,7 @@ endif()
 # diagrams degrade to their source text rather than failing the build, and the .puml files under
 # docs/diagrams/ can still be rendered by hand or by scripts/generate_docs.sh.
 #-------------------------------------------------------------------------------------------------
-find_program(PLANTUML_JAR_PATH
+find_file(PLANTUML_JAR_PATH
     NAMES plantuml.jar
     PATHS /usr/share/plantuml /usr/local/share/plantuml /opt/plantuml "$ENV{PLANTUML_HOME}"
     DOC "Path to plantuml.jar, used by Doxygen to render \\startuml blocks"
