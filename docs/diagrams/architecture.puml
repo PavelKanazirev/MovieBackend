@@ -9,9 +9,46 @@
 ' Render with:  plantuml -tsvg docs/diagrams/architecture.puml
 ' =================================================================================================
 
-class Dummy {
-    - String Dummy
-    + dummy()
+skinparam componentStyle rectangle
+skinparam backgroundColor transparent
+
+package "moviebackend_core (src/, include/moviebackend/)" {
+    [Logging\n(logging.hpp/.cpp)] as Logging
+    [Catalog\n(catalog.hpp/.cpp)] as Catalog
+    [BookingService\n(booking_service.hpp/.cpp)] as BookingService
+    [Domain types\n(domain_types.hpp/.cpp)] as DomainTypes
+
+    BookingService ..> Catalog : reads (immutable,\nno lock needed)
+    BookingService ..> DomainTypes : returns
+    Catalog ..> DomainTypes : returns
+    BookingService ..> Logging : MB_LOG_*
+    Catalog ..> Logging : MB_LOG_*
 }
+
+package "moviebackend_net (planned, PR3)" {
+    [TCP server] as TcpServer
+    [Request handler] as RequestHandler
+    [Protobuf wire types] as Proto
+}
+
+package "consumers" {
+    [moviebackend_server\n(main.cpp, planned PR3)] as ServerExe
+    [Python CLI\n(planned PR4)] as Cli
+    [Any in-process C++ UI] as EmbeddedUi
+}
+
+TcpServer ..> RequestHandler
+RequestHandler ..> Proto
+RequestHandler ..> BookingService : translates requests to/from
+ServerExe ..> TcpServer
+Cli ..> TcpServer : Protobuf over TCP
+EmbeddedUi ..> BookingService : links moviebackend_core directly,\nno network involved
+
+note right of BookingService
+  Everything in this box already
+  exists and is unit-tested as of
+  PR2. The networking box is the
+  subject of PR3.
+end note
 
 @enduml

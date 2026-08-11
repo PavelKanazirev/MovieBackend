@@ -1,0 +1,51 @@
+@startuml concurrent_booking
+' =================================================================================================
+' What booking_service_concurrency_test.cpp actually proves, drawn out: two threads racing for the
+' same seat on the same showing. This is the requirements' "Service should be able to handle
+' multiple requests simultaneously (no over-bookings)" line, made concrete.
+'
+' Render with:  plantuml -tsvg docs/diagrams/concurrent_booking.puml
+' =================================================================================================
+
+skinparam backgroundColor transparent
+skinparam sequenceMessageAlign center
+
+participant "Thread A" as A
+participant "Thread B" as B
+participant "BookingService" as Service
+participant "Showing's\nstd::mutex" as Lock
+participant "Showing's\nseat state" as Seats
+
+A -> Service : bookSeats(showingId=42, {"a1"})
+B -> Service : bookSeats(showingId=42, {"a1"})
+
+A -> Lock : lock()
+activate Lock
+note over A, B
+  Both threads reach the mutex at
+  roughly the same time. Only one
+  proceeds; the other blocks here -
+  never inside a half-updated state.
+end note
+B -[#gray]-> Lock : lock() -- blocks
+A -> Seats : is "a1" free? yes
+A -> Seats : mark "a1" taken
+A -> Lock : unlock()
+deactivate Lock
+Service --> A : BookingResult{Ok, bookingId=101}
+
+activate Lock
+B -> Seats : is "a1" free? NO
+B -> Lock : unlock()
+deactivate Lock
+Service --> B : BookingResult{SeatAlreadyBooked}
+
+note over A, B
+  Whichever thread the OS scheduled
+  first wins - which one is never
+  deterministic, and the tests never
+  assert a particular winner, only
+  that there is exactly one.
+end note
+
+@enduml

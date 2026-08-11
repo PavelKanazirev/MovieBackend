@@ -19,7 +19,8 @@ Checks: >
   -cppcoreguidelines-avoid-magic-numbers,
   -readability-magic-numbers,
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-  -readability-identifier-length
+  -readability-identifier-length,
+  -cppcoreguidelines-macro-usage
 
 WarningsAsErrors: ''
 # Anchored to /MovieBackend/(include|src)/ rather than the bare '(include|src)/.*' this used to

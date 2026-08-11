@@ -1,0 +1,52 @@
+@startuml booking_sequence
+' =================================================================================================
+' The end-user flow from the requirements, end to end, as it exists today: a client calling
+' BookingService's C++ API directly (in-process). PR3 adds a TCP/Protobuf boundary in front of
+' this same sequence - the calls into BookingService itself will not change shape.
+'
+' Render with:  plantuml -tsvg docs/diagrams/booking_sequence.puml
+' =================================================================================================
+
+skinparam backgroundColor transparent
+skinparam sequenceMessageAlign center
+
+actor "End user" as User
+participant "Client\n(CLI / UI)" as Client
+participant "BookingService" as Service
+participant "Catalog\n(immutable)" as Catalog
+
+User -> Client : open app
+Client -> Service : listMovies()
+Service -> Catalog : movies()
+Catalog --> Service : MovieInfo[]
+Service --> Client : MovieInfo[]
+Client --> User : show movie list
+
+User -> Client : select a movie
+Client -> Service : listTheatersForMovie(movieId)
+Service -> Catalog : showings()
+Catalog --> Service : ShowingInfo[]
+Service --> Client : TheaterInfo[] (deduplicated)
+Client --> User : show theater list
+
+User -> Client : select a theater
+Client -> Service : listSeats(movieId, theaterId)
+Service -> Catalog : lookup showing
+Service --> Client : SeatMap (e.g. a1..a20,\neach available or taken)
+Client --> User : show seat map
+
+User -> Client : pick seats a1, a2, a3
+Client -> Service : bookSeats(showingId, {"a1","a2","a3"})
+
+activate Service
+note right of Service
+  Single critical section, see
+  concurrent_booking.puml for what
+  happens when two clients race here.
+end note
+Service --> Client : BookingResult{Ok, bookingId}
+deactivate Service
+
+Client --> User : confirmation + booking id
+
+@enduml
