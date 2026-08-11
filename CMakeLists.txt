@@ -61,6 +61,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)   # -> moviebackend_set_warnings(<target>)
 include(ClangTidy)          # -> moviebackend_enable_clang_tidy(<target>)
 include(Dependencies)       # -> moviebackend_add_googletest(), and more to follow
+include(ProtobufCodegen)    # -> moviebackend_add_proto_library(...)
+
+#-------------------------------------------------------------------------------------------------
+# Generated Protobuf code
+#
+# proto/booking.proto is the interface definition shared by the C++ server and the Python client.
+#-------------------------------------------------------------------------------------------------
+moviebackend_add_protobuf()
+add_subdirectory(proto)
 
 #-------------------------------------------------------------------------------------------------
 # Library / executable targets
