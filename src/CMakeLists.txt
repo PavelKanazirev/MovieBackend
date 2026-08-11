@@ -47,6 +47,7 @@ moviebackend_enable_clang_tidy(moviebackend_core)
 #-------------------------------------------------------------------------------------------------
 add_library(moviebackend_net
     net/socket.cpp
+    net/message_framing.cpp
 )
 
 target_link_libraries(moviebackend_net
