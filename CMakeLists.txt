@@ -49,7 +49,7 @@ endif()
 # Project-wide options
 #-------------------------------------------------------------------------------------------------
 option(MOVIEBACKEND_BUILD_TESTS        "Build the unit test suite"                          ON)
-option(MOVIEBACKEND_BUILD_SERVER       "Build the standalone TCP server executable"        OFF)
+option(MOVIEBACKEND_BUILD_SERVER       "Build the standalone TCP server executable"         ON)
 option(MOVIEBACKEND_ENABLE_CLANG_TIDY  "Run clang-tidy as part of compilation"             OFF)
 option(MOVIEBACKEND_WARNINGS_AS_ERRORS "Treat compiler warnings as errors"                 OFF)
 option(MOVIEBACKEND_FORCE_FETCH_DEPS   "Always build dependencies from source, never reuse
@@ -61,6 +61,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)   # -> moviebackend_set_warnings(<target>)
 include(ClangTidy)          # -> moviebackend_enable_clang_tidy(<target>)
 include(Dependencies)       # -> moviebackend_add_googletest(), and more to follow
+include(ProtobufCodegen)    # -> moviebackend_add_proto_library(...)
+
+#-------------------------------------------------------------------------------------------------
+# Generated Protobuf code
+#
+# proto/booking.proto is the interface definition shared by the C++ server and the Python client.
+#-------------------------------------------------------------------------------------------------
+moviebackend_add_protobuf()
+add_subdirectory(proto)
 
 #-------------------------------------------------------------------------------------------------
 # Library / executable targets
@@ -95,3 +104,6 @@ install(DIRECTORY include/moviebackend
 # Install the default catalog configuration
 install(FILES config/catalog.json
         DESTINATION ${CMAKE_INSTALL_DATADIR}/moviebackend)
+
+install(FILES proto/booking.proto
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/moviebackend/proto)

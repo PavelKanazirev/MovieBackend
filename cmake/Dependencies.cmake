@@ -98,3 +98,63 @@ function(moviebackend_add_nlohmann_json)
     set(JSON_Install    OFF CACHE INTERNAL "")
     FetchContent_MakeAvailable(nlohmann_json)
 endfunction()
+
+#-------------------------------------------------------------------------------------------------
+# Protobuf - https://github.com/protocolbuffers/protobuf
+#
+# Provides both the runtime library the server links against and the `protoc` compiler used to
+# generate C++ (and Python, for the CLI client) sources from proto/booking.proto - added in the
+# next commit, alongside the CMake helper that actually invokes protoc.
+#
+# Two discovery modes are tried, because distributions disagree about which one they ship:
+#   * CONFIG mode  - protobuf >= 3.22 installs protobuf-config.cmake (vcpkg, recent Homebrew,
+#                    protobuf built from source).
+#   * MODULE mode  - CMake's own FindProtobuf.cmake, which is what Debian/Ubuntu's
+#                    libprotobuf-dev is found through (confirmed: this is the mode that succeeds
+#                    on a plain `apt install protobuf-compiler libprotobuf-dev`).
+# Both modes define the same protobuf::libprotobuf target and Protobuf_PROTOC_EXECUTABLE
+# variable, so the rest of the build does not care which one succeeded.
+#
+# The FetchContent fallback pins v21.12 - the last release before Protobuf took a hard dependency
+# on Abseil, which keeps the from-source build fast and self-contained.
+#-------------------------------------------------------------------------------------------------
+function(moviebackend_add_protobuf)
+    if(NOT MOVIEBACKEND_FORCE_FETCH_DEPS)
+        find_package(Protobuf CONFIG QUIET)
+        if(NOT Protobuf_FOUND)
+            find_package(Protobuf MODULE QUIET)
+        endif()
+
+        if(Protobuf_FOUND)
+            # CONFIG mode does not always set Protobuf_PROTOC_EXECUTABLE; derive it from the
+            # imported target so downstream code has a single variable to rely on either way.
+            if(NOT Protobuf_PROTOC_EXECUTABLE AND TARGET protobuf::protoc)
+                get_target_property(_protoc_location protobuf::protoc IMPORTED_LOCATION_RELEASE)
+                if(NOT _protoc_location)
+                    get_target_property(_protoc_location protobuf::protoc IMPORTED_LOCATION)
+                endif()
+                set(Protobuf_PROTOC_EXECUTABLE "${_protoc_location}" CACHE FILEPATH "protoc" FORCE)
+            endif()
+
+            message(STATUS "Protobuf: using system package ${Protobuf_VERSION} "
+                           "(protoc: ${Protobuf_PROTOC_EXECUTABLE})")
+            set(Protobuf_PROTOC_EXECUTABLE "${Protobuf_PROTOC_EXECUTABLE}" PARENT_SCOPE)
+            return()
+        endif()
+    endif()
+
+    message(STATUS "Protobuf: not found locally, fetching v21.12 (this takes a few minutes)")
+    FetchContent_Declare(
+        protobuf
+        GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
+        GIT_TAG        v21.12
+        GIT_SHALLOW    TRUE
+    )
+    set(protobuf_BUILD_TESTS         OFF CACHE BOOL "" FORCE)
+    set(protobuf_BUILD_EXAMPLES      OFF CACHE BOOL "" FORCE)
+    set(protobuf_INSTALL             OFF CACHE BOOL "" FORCE)
+    set(protobuf_MSVC_STATIC_RUNTIME OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(protobuf)
+
+    set(Protobuf_PROTOC_EXECUTABLE "$<TARGET_FILE:protobuf::protoc>" PARENT_SCOPE)
+endfunction()

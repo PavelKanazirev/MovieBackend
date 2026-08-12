@@ -1,0 +1,180 @@
+// =================================================================================================
+// booking.proto - the interface definition (IDL) for the MovieBackend booking service.
+//
+// This file is the single source of truth for the client/server protocol. Both the C++ server
+// and the Python CLI client generate their message classes from it (see the `moviebackend_proto`
+// CMake target and scripts/generate_python_proto.sh), so the two can never drift apart.
+//
+// Transport
+// ---------
+// Messages travel over a plain TCP socket. Protobuf is not self-delimiting, so every message is
+// preceded by a 4-byte big-endian (network byte order) unsigned length prefix:
+//
+//     +----------------+--------------------------------+
+//     | uint32be  len  |  `len` bytes of serialized msg  |
+//     +----------------+--------------------------------+
+//
+// The client sends a `Request`, the server replies with exactly one `Response` carrying the same
+// `correlation_id`. A connection may carry many request/response pairs in sequence.
+//
+// Compatibility
+// -------------
+// proto3 semantics: never renumber or reuse a field tag, and only ever add new fields with new
+// tags. Old clients then keep working against newer servers and vice versa.
+// =================================================================================================
+syntax = "proto3";
+
+package moviebackend.proto;
+
+// -------------------------------------------------------------------------------------------------
+// Domain entities
+// -------------------------------------------------------------------------------------------------
+
+// A movie that is currently playing.
+message Movie
+{
+    string id               = 1; // Stable identifier, e.g. "m1". Used in every other request.
+    string title            = 2; // Human-readable title, e.g. "The Matrix".
+    int32  duration_minutes = 3; // Runtime in minutes. 0 when unknown.
+    string genre            = 4; // Free-form genre label, e.g. "Sci-Fi". May be empty.
+}
+
+// A theater (screen) that shows movies.
+message Theater
+{
+    string id            = 1; // Stable identifier, e.g. "t1".
+    string name          = 2; // Human-readable name, e.g. "Cineplex Downtown - Screen 1".
+    string location      = 3; // Free-form location label. May be empty.
+    int32  seat_capacity = 4; // Total number of seats in this theater.
+}
+
+// -------------------------------------------------------------------------------------------------
+// Status codes
+//
+// Every Response carries one of these. OK means the request succeeded and the matching payload
+// is populated; anything else means the payload is unset and `message` explains the failure.
+// -------------------------------------------------------------------------------------------------
+enum StatusCode
+{
+    STATUS_OK                  = 0; // Request succeeded.
+    STATUS_UNKNOWN_MOVIE       = 1; // No movie exists with the requested id.
+    STATUS_UNKNOWN_THEATER     = 2; // No theater exists with the requested id.
+    STATUS_UNKNOWN_SHOWING     = 3; // The theater exists, but does not show that movie.
+    STATUS_UNKNOWN_SEAT        = 4; // A requested seat id is not part of the theater's layout.
+    STATUS_SEAT_ALREADY_BOOKED = 5; // At least one seat was taken; see `conflicting_seats`.
+    STATUS_INVALID_REQUEST     = 6; // Malformed request (no seats, duplicate seats, ...).
+    STATUS_UNKNOWN_BOOKING     = 7; // No booking exists with the requested id.
+    STATUS_INTERNAL_ERROR      = 8; // Unexpected server-side failure.
+}
+
+// -------------------------------------------------------------------------------------------------
+// Request payloads
+// -------------------------------------------------------------------------------------------------
+
+// "View all playing movies."
+message ListMoviesRequest
+{
+    // No parameters - the catalog is small enough that it is always returned in full.
+}
+
+message ListMoviesResponse
+{
+    repeated Movie movies = 1; // Ordered as configured in the catalog file.
+}
+
+// "See all theaters showing the selected movie."
+message ListTheatersRequest
+{
+    string movie_id = 1; // Required. Must match a Movie.id from ListMoviesResponse.
+}
+
+message ListTheatersResponse
+{
+    repeated Theater theaters = 1; // May legitimately be empty if no theater shows the movie.
+}
+
+// "See available seats for the selected theater & movie."
+message ListSeatsRequest
+{
+    string movie_id   = 1; // Required.
+    string theater_id = 2; // Required. Must be showing `movie_id`.
+}
+
+message ListSeatsResponse
+{
+    repeated string available_seats = 1; // Seat ids that can still be booked, e.g. ["a1","a2"].
+    repeated string booked_seats    = 2; // Seat ids already taken, for rendering a seat map.
+    int32           seat_capacity   = 3; // available_seats.size() + booked_seats.size().
+}
+
+// "Book one or more of the available seats."
+//
+// All-or-nothing: either every requested seat is reserved, or none of them are and the response
+// carries STATUS_SEAT_ALREADY_BOOKED together with the seats that caused the clash.
+message BookSeatsRequest
+{
+    string          movie_id   = 1; // Required.
+    string          theater_id = 2; // Required. Must be showing `movie_id`.
+    repeated string seat_ids   = 3; // Required, non-empty, no duplicates.
+    string          customer   = 4; // Optional free-form label recorded with the booking.
+}
+
+message BookSeatsResponse
+{
+    string          booking_id   = 1; // Server-generated handle, usable with CancelBookingRequest.
+    repeated string booked_seats = 2; // Echo of the seats that were reserved.
+}
+
+// Release a previous booking. Not part of the required end-user flow, but it keeps the service
+// usable for demos and makes the booking lifecycle testable end to end.
+message CancelBookingRequest
+{
+    string booking_id = 1; // Required. As returned by BookSeatsResponse.
+}
+
+message CancelBookingResponse
+{
+    repeated string released_seats = 1; // Seats that became available again.
+}
+
+// -------------------------------------------------------------------------------------------------
+// Envelopes
+//
+// Exactly one envelope type travels in each direction. The `oneof` makes the payload type
+// explicit and lets the C++ handler dispatch with a single switch on `payload_case()`.
+// -------------------------------------------------------------------------------------------------
+message Request
+{
+    // Echoed back verbatim in the matching Response. Lets a client correlate replies; a simple
+    // sequential client can just leave it at 0.
+    uint64 correlation_id = 1;
+
+    oneof payload
+    {
+        ListMoviesRequest    list_movies    = 2;
+        ListTheatersRequest  list_theaters  = 3;
+        ListSeatsRequest     list_seats     = 4;
+        BookSeatsRequest     book_seats     = 5;
+        CancelBookingRequest cancel_booking = 6;
+    }
+}
+
+message Response
+{
+    uint64     correlation_id = 1; // Copied from the Request this answers.
+    StatusCode status         = 2; // STATUS_OK means `payload` is set.
+    string     message        = 3; // Human-readable detail. Always safe to show to a user.
+
+    // Populated only for STATUS_SEAT_ALREADY_BOOKED: the subset of the requested seats that were
+    // already taken. Lets a UI highlight exactly what went wrong without re-querying.
+    repeated string conflicting_seats = 4;
+
+    oneof payload
+    {
+        ListMoviesResponse    list_movies    = 5;
+        ListTheatersResponse  list_theaters  = 6;
+        ListSeatsResponse     list_seats     = 7;
+        BookSeatsResponse     book_seats     = 8;
+        CancelBookingResponse cancel_booking = 9;
+    }
+}

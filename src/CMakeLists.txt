@@ -39,3 +39,57 @@ target_link_libraries(moviebackend_core
 
 moviebackend_set_warnings(moviebackend_core)
 moviebackend_enable_clang_tidy(moviebackend_core)
+
+#-------------------------------------------------------------------------------------------------
+# moviebackend_net - transport. Cross-platform sockets, message framing, the threaded TCP server,
+# and the Protobuf <-> domain request handler land here across the next several commits; this one
+# starts it with just the socket wrapper.
+#-------------------------------------------------------------------------------------------------
+add_library(moviebackend_net
+    net/socket.cpp
+    net/message_framing.cpp
+    net/tcp_server.cpp
+    request_handler.cpp
+)
+
+target_link_libraries(moviebackend_net
+    PUBLIC
+        moviebackend_core
+        moviebackend_proto
+)
+
+target_compile_features(moviebackend_net PUBLIC cxx_std_23)
+
+# Winsock. MSVC picks this up from the #pragma comment in socket.cpp, but MinGW/MSYS2 and
+# clang-cl need it stated here.
+if(WIN32)
+    target_link_libraries(moviebackend_net PUBLIC ws2_32)
+endif()
+
+target_link_libraries(moviebackend_net PUBLIC Threads::Threads)
+
+moviebackend_set_warnings(moviebackend_net)
+moviebackend_enable_clang_tidy(moviebackend_net)
+
+#-------------------------------------------------------------------------------------------------
+# moviebackend_server - the standalone TCP server executable. main.cpp is pure assembly (Catalog
+# -> BookingService -> RequestHandler -> TcpServer); everything with actual behaviour is one of
+# the libraries above, already unit/integration tested on its own.
+#-------------------------------------------------------------------------------------------------
+if(MOVIEBACKEND_BUILD_SERVER)
+    add_executable(moviebackend_server main.cpp)
+
+    target_link_libraries(moviebackend_server
+        PRIVATE
+            moviebackend_net
+    )
+
+    moviebackend_set_warnings(moviebackend_server)
+    moviebackend_enable_clang_tidy(moviebackend_server)
+
+    install(TARGETS moviebackend_server RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+install(TARGETS moviebackend_core moviebackend_net
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
