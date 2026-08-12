@@ -49,7 +49,7 @@ endif()
 # Project-wide options
 #-------------------------------------------------------------------------------------------------
 option(MOVIEBACKEND_BUILD_TESTS        "Build the unit test suite"                          ON)
-option(MOVIEBACKEND_BUILD_SERVER       "Build the standalone TCP server executable"        OFF)
+option(MOVIEBACKEND_BUILD_SERVER       "Build the standalone TCP server executable"         ON)
 option(MOVIEBACKEND_ENABLE_CLANG_TIDY  "Run clang-tidy as part of compilation"             OFF)
 option(MOVIEBACKEND_WARNINGS_AS_ERRORS "Treat compiler warnings as errors"                 OFF)
 option(MOVIEBACKEND_FORCE_FETCH_DEPS   "Always build dependencies from source, never reuse
@@ -104,3 +104,6 @@ install(DIRECTORY include/moviebackend
 # Install the default catalog configuration
 install(FILES config/catalog.json
         DESTINATION ${CMAKE_INSTALL_DATADIR}/moviebackend)
+
+install(FILES proto/booking.proto
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/moviebackend/proto)

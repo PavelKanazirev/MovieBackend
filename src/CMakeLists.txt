@@ -70,3 +70,26 @@ target_link_libraries(moviebackend_net PUBLIC Threads::Threads)
 
 moviebackend_set_warnings(moviebackend_net)
 moviebackend_enable_clang_tidy(moviebackend_net)
+
+#-------------------------------------------------------------------------------------------------
+# moviebackend_server - the standalone TCP server executable. main.cpp is pure assembly (Catalog
+# -> BookingService -> RequestHandler -> TcpServer); everything with actual behaviour is one of
+# the libraries above, already unit/integration tested on its own.
+#-------------------------------------------------------------------------------------------------
+if(MOVIEBACKEND_BUILD_SERVER)
+    add_executable(moviebackend_server main.cpp)
+
+    target_link_libraries(moviebackend_server
+        PRIVATE
+            moviebackend_net
+    )
+
+    moviebackend_set_warnings(moviebackend_server)
+    moviebackend_enable_clang_tidy(moviebackend_server)
+
+    install(TARGETS moviebackend_server RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+install(TARGETS moviebackend_core moviebackend_net
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
