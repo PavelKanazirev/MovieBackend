@@ -49,11 +49,13 @@ add_library(moviebackend_net
     net/socket.cpp
     net/message_framing.cpp
     net/tcp_server.cpp
+    request_handler.cpp
 )
 
 target_link_libraries(moviebackend_net
     PUBLIC
         moviebackend_core
+        moviebackend_proto
 )
 
 target_compile_features(moviebackend_net PUBLIC cxx_std_23)

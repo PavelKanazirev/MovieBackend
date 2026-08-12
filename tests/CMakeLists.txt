@@ -22,6 +22,7 @@ add_executable(moviebackend_unit_tests
     booking_service_test.cpp
     catalog_test.cpp
     logging_test.cpp
+    request_handler_test.cpp
 )
 
 target_link_libraries(moviebackend_unit_tests
@@ -45,6 +46,7 @@ gtest_discover_tests(moviebackend_unit_tests
 #-------------------------------------------------------------------------------------------------
 add_executable(moviebackend_integration_tests
     message_framing_test.cpp
+    tcp_server_integration_test.cpp
 )
 
 target_link_libraries(moviebackend_integration_tests
